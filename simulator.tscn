@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://cge8u2241070o"]
+
+[ext_resource type="PackedScene" uid="uid://bve3rksvsb2w0" path="res://back_ground.tscn" id="1_coupw"]
+[ext_resource type="Script" path="res://SandSpawner.gd" id="2_4mfvr"]
+
+[node name="Simulator" type="Node2D"]
+
+[node name="BackGround" parent="." instance=ExtResource("1_coupw")]
+
+[node name="SandSpawner" type="Node2D" parent="."]
+script = ExtResource("2_4mfvr")
