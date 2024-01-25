@@ -7,6 +7,7 @@ var _finalDestinationReached = false
 var _meshSaved = false
 var _row = -1
 var _column = -1
+var _iterationsSinceLastMove = 0
 
 
 func _init(mesh,position,color,row,column):
@@ -43,6 +44,13 @@ func setMeshSaved() -> void:
 
 func isMeshSaved() -> bool:
 	return _meshSaved
+	
+func incrementIterationCount() -> void:
+	_iterationsSinceLastMove = _iterationsSinceLastMove + 1
+func resetIterationCount() -> void:
+	_iterationsSinceLastMove = 0
+func isDoneMoving() -> bool:
+	return _iterationsSinceLastMove > 4
 
 func toString() -> String:
 	return "Row: " + str(_row) + ",Column: " + str(_column)
