@@ -1,4 +1,6 @@
-[gd_scene format=3 uid="uid://bve3rksvsb2w0"]
+[gd_scene load_steps=2 format=3 uid="uid://bve3rksvsb2w0"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_wss4r"]
 
 [node name="BackGround" type="Node2D"]
 
@@ -6,3 +8,11 @@
 offset_right = 480.0
 offset_bottom = 728.0
 color = Color(0, 0, 0, 1)
+
+[node name="Controls" type="Label" parent="."]
+material = SubResource("CanvasItemMaterial_wss4r")
+offset_right = 480.0
+offset_bottom = 64.0
+text = "[Left Click] Spawn Sand
+[Space] Reset"
+horizontal_alignment = 1

@@ -1,22 +1,45 @@
 extends Node2D
 
-var cellSize: int = 8
+# The lower this is set, the tiner the sand. It will get pretty hard to run though
+var cellSize: int = 6
 # This is the hardcoded width of the window divided by the cells size
 var windowWidth: int = -1
 # This is the hardcoded height of the window divided by the cells size
 var windowHeight: int = -1
 
-var rng = RandomNumberGenerator.new()
-
-var instantiatedMeshes = []
+# The current state of the sand in the simulation
 var currentSand: Array = []
+# Holds the meshes that will be used to visualize the sand simulation
+var meshInstances = []
 
+# Holds the directions that the sand can go in
 var directions: Array[int] = [-1,1]
-var colorIndex: int = 0
-var colors = [Color.WHITE, Color.RED, Color.GREEN, Color.BLUE]
+# What color to pick from the colors array
+var colorIndex: int = -1
+# The colors in order in which they will be displayed
+var colors = []
+
+var colorSchemes = [
+	["#a8e0ff", "#8ee3f5", "#70cad1", "#3e517a", "#b08ea2"],
+	["#dce0d9", "#31081f", "#6b0f1a", "#595959", "#808f85"],
+	["#247ba0", "#70c1b3", "#b2dbbf", "#f3ffbd", "#ff1654"],
+	["#644536", "#b2675e", "#c4a381", "#bbd686", "#eef1bd"],
+	["#453823", "#561f37", "#39a2ae", "#55dbcb", "#75e4b3"],
+	["#f9e7e7", "#ded6d6", "#d2cbcb", "#ada0a6", "#7d938a"],
+	["#48acf0", "#594236", "#6f584b", "#93a3bc", "#ccdde2"],
+	["#fa8334", "#fffd77", "#ffe882", "#388697", "#271033"],
+	["#ebd4cb", "#da9f93", "#b6465f", "#890620", "#2c0703"],
+	["#01baef", "#0cbaba", "#380036", "#26081c", "#150811"],
+	["#c9f2c7", "#aceca1", "#96be8c", "#629460", "#243119"],
+]
+# Human readable colors
+#var colors = [Color.BLUE_VIOLET, Color.BLUE, Color.LIME_GREEN, Color.YELLOW_GREEN, Color.CORAL, Color.DARK_RED,Color.ANTIQUE_WHITE]
+
+var rng = RandomNumberGenerator.new()
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	colors = colorSchemes[rng.randi_range(0,colorSchemes.size()-1)]
 	windowWidth = (480/cellSize)
 	windowHeight = (720/cellSize)
 
@@ -25,26 +48,51 @@ func _ready():
 		var sandRowMeshes = []
 		for column in range(windowWidth):
 			sandRow.append(null)
-			var meshInstance = MeshInstance2D.new()
-			sandRowMeshes.append(meshInstance)
+			var surfaceTool = SurfaceTool.new()
+			surfaceTool.begin(Mesh.PRIMITIVE_TRIANGLES)
+			var halfCellSize = cellSize/2
+						
+			# Creates a triangle like the following
+			#  *
+			#  | \
+			#  *--*
+			surfaceTool.add_vertex(Vector3(-1 * halfCellSize, -1* halfCellSize, 0))  # Z-value remains 0
+			surfaceTool.add_vertex(Vector3(-1* halfCellSize, 1* halfCellSize, 0))
+			surfaceTool.add_vertex(Vector3(1* halfCellSize, -1* halfCellSize, 0))
 
+			# Creates a triangle like the following
+			#  *--*
+			#   \ |
+			#     *
+			surfaceTool.add_vertex(Vector3(-1 * halfCellSize, 1 * halfCellSize, 0))  # Z-value remains 0
+			surfaceTool.add_vertex(Vector3(1* halfCellSize, 1 * halfCellSize, 0))
+			surfaceTool.add_vertex(Vector3(1* halfCellSize, -1 * halfCellSize, 0))
+			var mesh = surfaceTool.commit()
+
+			var xposition = cellSize * column
+			var yposition = cellSize * row
+			var meshInstance = MeshInstance2D.new()
+			meshInstance.hide()
+
+			meshInstance.mesh = mesh
+			meshInstance.translate(Vector2(xposition, yposition))
+
+			add_child(meshInstance)
+			sandRowMeshes.append(meshInstance)
+		meshInstances.append(sandRowMeshes)
 		currentSand.append(sandRow)
 	print("Column amount: ", windowWidth)
 	print("Row amount: ", windowHeight)
 	pass
 
-	
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	if Input.is_action_just_pressed("reset"):
+		resetSimulation()
 	if Input.is_action_just_pressed("left"):
 		colorIndex = (colorIndex + 1) % (colors.size())
 	if Input.is_action_pressed("left"):
-		var mouse_position: Vector2 = get_global_mouse_position()
-		coordinatesToSand(mouse_position)
-	for instance in instantiatedMeshes:
-		remove_child(instance)
-	instantiatedMeshes = []
+		var mousePosition: Vector2 = get_global_mouse_position()
+		coordinatesToSand(mousePosition)
 	generateNewSand()
 	drawSand()
 	pass
@@ -55,67 +103,36 @@ func drawSand():
 		for column in range(windowWidth):		
 			var sandParticle = sandParticleRow[column]
 			if(sandParticle == null):
+				meshInstances[row][column].hide()
 				continue
-			var meshInstance = MeshInstance2D.new()			
-
-			meshInstance.mesh = sandParticle.getMesh()
-			meshInstance.translate(Vector2(sandParticle.getPosition().x, sandParticle.getPosition().y))
-
-			meshInstance.self_modulate = sandParticle.getColor()
-
-			add_child(meshInstance)
-			instantiatedMeshes.append(meshInstance)
+			meshInstances[row][column].self_modulate = sandParticle.getColor()
+			meshInstances[row][column].show()
 
 func addSandToIndex(row: int, column: int) -> void:
 	if(sandInIndex(row,column,currentSand)):
 		return
-	var surfaceTool = SurfaceTool.new()
-	surfaceTool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var halfCellSize = cellSize/2
-				
-	# Creates a triangle like the following
-	#  *
-	#  | \
-	#  *--*
-	surfaceTool.add_vertex(Vector3(-1 * halfCellSize, -1* halfCellSize, 0))  # Z-value remains 0
-	surfaceTool.add_vertex(Vector3(-1* halfCellSize, 1* halfCellSize, 0))
-	surfaceTool.add_vertex(Vector3(1* halfCellSize, -1* halfCellSize, 0))
-
-	# Creates a triangle like the following
-	#  *--*
-	#   \ |
-	#     *
-	surfaceTool.add_vertex(Vector3(-1 * halfCellSize, 1 * halfCellSize, 0))  # Z-value remains 0
-	surfaceTool.add_vertex(Vector3(1* halfCellSize, 1 * halfCellSize, 0))
-	surfaceTool.add_vertex(Vector3(1* halfCellSize, -1 * halfCellSize, 0))
-
-	# Commit to a mesh.
-	var mesh = surfaceTool.commit()
-
-	var xposition = cellSize * column
-	var yposition = cellSize * row
-	var sandParticle = Sand.new(mesh, Vector2(xposition,yposition), colors[colorIndex],row,column)
+	var sandParticle = Sand.new(colors[colorIndex],row,column)
 	currentSand[row][column] = sandParticle
 
 func generateNewSand() -> void:
 	var sandToMoveDown = []
+	# Look through every location to see if the sand should move down
 	for row in range(windowHeight):
 		for column in range(windowWidth):
-			if(sandInIndex(row,column, currentSand)):
+			if(sandInIndex(row,column, currentSand) && !currentSand[row][column].isDoneMoving()):
 				if(sandShouldMoveDown(row,column, currentSand)):
 					sandToMoveDown.append(currentSand[row][column])
 				else:
 					currentSand[row][column].incrementIterationCount()
+	# Move all the sand down that we need to
 	for sand in sandToMoveDown:
 		sand.resetIterationCount()
 		moveSandDown(sand.getRow(),sand.getColumn(),currentSand)
-					
 
 func coordinatesToSand(location: Vector2):
 	var row = int(location.y/cellSize)
 	var column = int(location.x/cellSize)
-	addSandToIndex(row,getClampedColumn(column))
-
+	addSandToIndex(getClampedRow(row),getClampedColumn(column))
 			
 func sandInIndex(row: int, column: int,sandArray) -> bool:
 	return sandArray[row][column] != null
@@ -140,7 +157,7 @@ func sandShouldMoveDown(row: int, column: int,sandArray) -> bool:
 	
 func moveSandDown(row: int, column: int, sandArray) -> void:
 	# The sand moves to the side
-	if (sandInIndex(row +1 , column, sandArray)):
+	if (sandInIndex(row + 1 , column, sandArray)):
 		var direction = directions[rng.randi_range(0,1)]
 		if (column + direction > windowWidth -1):
 			direction = direction * -1
@@ -150,20 +167,39 @@ func moveSandDown(row: int, column: int, sandArray) -> void:
 			direction = direction * -1
 			# We need to make sure the direction does not go out of bounds
 			if(column + direction > windowWidth - 1):
-				direction = direction * -1		
+				direction = direction * -1
 		sandArray[row + 1][column + direction] = sandArray[row][column]
 		sandArray[row][column] = null
 		var xposition = cellSize * (column + direction)
 		var yposition = cellSize * (row + 1)
-		sandArray[row + 1][column + direction].updatePosition(Vector2(xposition,yposition),row+1,column + direction)
+		sandArray[row + 1][column + direction].updatePosition(row + 1,column + direction)
 		return
 	# The sand moves down
 	sandArray[row + 1][column] = sandArray[row][column]
 	sandArray[row][column] = null
 	var xposition = cellSize * column
 	var yposition = cellSize * (row + 1)
-	sandArray[row + 1][column].updatePosition(Vector2(xposition,yposition),row+1,column)
+	sandArray[row + 1][column].updatePosition(row + 1,column)
 	
 func getClampedColumn(column: int) -> int:
-	return clampi(column, 0, windowWidth -1)
+	return clampi(column, 0, windowWidth - 1)
+	
+func getClampedRow(row: int) -> int:
+	return clampi(row, 0, windowHeight - 1)
+	
+func resetSimulation() -> void:
+	if Input.is_action_pressed("left"):
+		colorIndex = 0
+	else:
+		colorIndex = -1
+	colors = colorSchemes[rng.randi_range(0,colorSchemes.size()-1)]
+	currentSand = []
+	for row in range(windowHeight):
+		var sandRow = []
+		for column in range(windowWidth):
+			sandRow.append(null)
+		currentSand.append(sandRow)
+	print("Column amount: ", windowWidth)
+	print("Row amount: ", windowHeight)
+	drawSand()
 	
