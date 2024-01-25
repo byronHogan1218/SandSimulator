@@ -198,7 +198,7 @@ func resetSimulation() -> void:
 	colors = colorSchemes[rng.randi_range(0, colorSchemes.size()-1)]
 	currentSand = []
 	for row in range(windowHeight):
-	var sandRow: Array[Variant] = []
+		var sandRow: Array[Variant] = []
 		for column in range(windowWidth):
 			sandRow.append(null)
 		currentSand.append(sandRow)
