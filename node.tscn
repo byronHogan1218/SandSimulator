@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://ejnj1hm03w63"]
+
+[node name="Node" type="Node"]
+
+[node name="CanvasGroup" type="CanvasGroup" parent="."]
+modulate = Color(0, 0, 0, 1)
+scale = Vector2(480, 480)
