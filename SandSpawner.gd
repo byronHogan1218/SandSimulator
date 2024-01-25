@@ -40,19 +40,9 @@ func _ready():
 		newSandTest.append(sandRow)
 	print("Column amount: ", windowWidth)
 	print("Row amount: ", windowHeight)
-	addSandToIndex(0,10)
-	connect("input_event", _on_input_event)	
-	pass # Replace with function body.
-	
+	pass
 
-# Function called when any input event occurs
-func _on_input_event(viewport, event, shape_idx):
-	# Check if the input event is a mouse button press
-	if event is InputEventMouseButton and event.pressed:
-		# Check if the pressed mouse button is the left button (BUTTON_LEFT)
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			
-			print("Left mouse button pressed")
+	
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -161,18 +151,33 @@ func coordinatesToSand(location: Vector2):
 
 			
 func sandInIndex(row: int, column: int,sandArray) -> bool:
+	# TODO add logic here to block leaving the window trying to make sand
 	return sandArray[row][column] != null
 	
 func sandShouldMoveDown(row: int, column: int,sandArray) -> bool:
 	if(row + 1 > windowHeight-1):
 		return false
-	return sandArray[row + 1][column] == null
+	return sandArray[row + 1][column] == null || sandArray[row + 1][column +1] == null || sandArray[row + 1][column -1] ==null
 	
 func moveSandDown(row: int, column: int, sandArray) -> void:
+	if (sandInIndex(row +1 , column, sandArray)):
+		var direction = rng.randi_range(0,1)
+		if(direction == 0):
+			direction = -1
+		if (sandInIndex(row +1 , column + direction, sandArray)):
+			direction = direction * -1
+		sandArray[row + 1][column + direction] = sandArray[row][column]
+		sandArray[row][column] = null
+		var xposition = cellSize * (column + direction)
+		var yposition = cellSize * (row + 1)
+		print("direction: ", direction)
+		print("col ",column," new column: ", column + direction, sandArray[row + 1][column + direction])
+		sandArray[row + 1][column + direction].updatePosition(Vector2(xposition,yposition),row+1,column + direction)
+		return
+		
 	sandArray[row + 1][column] = sandArray[row][column]
 	sandArray[row][column] = null
 	var xposition = cellSize * column
 	var yposition = cellSize * (row + 1)
-	var test = sandArray[row + 1][column]
 	sandArray[row + 1][column].updatePosition(Vector2(xposition,yposition),row+1,column)
 	
