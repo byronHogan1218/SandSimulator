@@ -32,12 +32,9 @@ var colorSchemes = [
 	["#01baef", "#0cbaba", "#380036", "#26081c", "#150811"],
 	["#c9f2c7", "#aceca1", "#96be8c", "#629460", "#243119"],
 ]
-# Human readable colors
-#var colors = [Color.BLUE_VIOLET, Color.BLUE, Color.LIME_GREEN, Color.YELLOW_GREEN, Color.CORAL, Color.DARK_RED,Color.ANTIQUE_WHITE]
 
 var rng = RandomNumberGenerator.new()
 
-# Called when the node enters the scene tree for the first time.
 func _ready():
 	colors = colorSchemes[rng.randi_range(0,colorSchemes.size()-1)]
 	windowWidth = (480/cellSize)
