@@ -124,7 +124,7 @@ func generateNewSand() -> void:
 					sandToMoveDown.append(currentSand[row][column])
 				else:
 					currentSand[row][column].incrementIterationCount()
-					# Move all the sand down that we need to
+	# Move all the sand down that we need to
 	for sand in sandToMoveDown:
 		sand.resetIterationCount()
 		moveSandDown(sand.getRow(), sand.getColumn(), currentSand)
@@ -143,19 +143,19 @@ func sandInIndex(row: int, column: int, sandArray) -> bool:
 func sandShouldMoveDown(row: int, column: int, sandArray) -> bool:
 	if(sandArray[row][column].isDoneMoving()):
 		return false
-		# Cannot move below the screen
+	# Cannot move below the screen
 	if(row + 1 >= windowHeight):
 		return false
-		# Is the space below the sand available
+	# Is the space below the sand available
 	if(sandArray[row + 1][column] == null):
 		return true
-		# Cannot move to the left so only check to move to the right
+	# Cannot move to the left so only check to move to the right
 	if(column - 1 < 0):
 		return sandArray[row + 1][column + 1] == null
-		# Cannot move to the right so only check to move to the left
+	# Cannot move to the right so only check to move to the left
 	if(column + 1 >= windowWidth):
 		return sandArray[row + 1][column - 1] == null
-		# Will determine if we can move to the left or the right
+	# Will determine if we can move to the left or the right
 	return sandArray[row + 1][column + 1] == null || sandArray[row + 1][column - 1] == null
 
 
@@ -176,7 +176,7 @@ func moveSandDown(row: int, column: int, sandArray) -> void:
 		sandArray[row][column] = null
 		sandArray[row + 1][column + direction].updatePosition(row + 1, column + direction)
 		return
-		# The sand moves down
+	# The sand moves down
 	sandArray[row + 1][column] = sandArray[row][column]
 	sandArray[row][column] = null
 	sandArray[row + 1][column].updatePosition(row + 1, column)
